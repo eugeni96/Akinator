@@ -7,14 +7,15 @@ using namespace std;
 void control ()
 {
     Akinator test;
-    test.initAkinator();
-    char enter[64]=" ";
-    char no[64]="нет";
-    while (strcmp(enter,no))
+    test.load();
+    string no="нет";
+    string intro="да";
+    while (intro!=no)
     {
-    test.play();
-    cout<<"Еще будешь?"<<endl;
-    cin.getline(enter,64);
+        test.play();
+        test.save();
+        cout<<"Еще будешь?"<<endl;
+        intro=enterProtector();
     }
 }
 

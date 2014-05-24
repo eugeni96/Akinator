@@ -1,7 +1,7 @@
 #include "func.h"
 #include <iostream>
 #include <cstring>
-
+#include <fstream>
 
 using namespace std;
 
@@ -13,27 +13,25 @@ Akinator::Akinator():
 
 void Akinator::initAkinator()
 {
-    const int strSize=64;
-
     root=new Node;
     root->pos=nullptr;
     root->neg=nullptr;
-    char rootQuest[strSize]="Оно летает?";
-    strcpy(root->data,rootQuest);
+    string rootQuest="Оно летает?";
+    root->data=rootQuest;
 
     Node *posit=nullptr;
     posit=new Node;
     posit->neg=nullptr;
     posit->pos=nullptr;
-    char crown[strSize]="ворона";
-    strcpy(posit->data,crown);
+    string crown="ворона";
+    posit->data=crown;
 
     Node *negat=nullptr;
     negat=new Node;
     negat->neg=nullptr;
     negat->pos=nullptr;
-    char dog[strSize]="собака";
-    strcpy(negat->data,dog);
+    string dog="собака";
+    negat->data=dog;
 
     root->pos=posit;
     root->neg=negat;
@@ -44,35 +42,33 @@ void Akinator::initAkinator()
 
 void Akinator::addNode(Akinator::Node *&p)
 {
-    const int strSize=64;
-
     cout<<"Введите вопрос:"<<endl;
-    char quest[strSize];
-    cin.getline(quest,strSize);
+    string quest;
+    cin>>quest;
 
-    cout<<"да/нет ?"<<endl;
-    char choise[strSize];
-    cin.getline(choise,strSize);
+    cout<<"Введите вариант ответа на ваш вопрос: [да/нет]"<<endl;
+    string choise;
+    choise=enterProtector();
 
-    char no[strSize]="нет";
-    cout<<"Введите ответ:"<<endl;
-    char answer[strSize];
-    cin.getline(answer,strSize);
+    string no="нет";
+    cout<<"Введите ответ на вопрос, соответствующий указанному варианту:"<<endl;
+    string answer;
+    cin>>answer;
 
     Node *n=nullptr;
     n=new Node;
-    strcpy(n->data,answer);
+    n->data=answer;
     n->pos=nullptr;
     n->neg=nullptr;
 
     Node *t=nullptr;
     t=new Node;
-    strcpy(t->data,p->data);
+    t->data=p->data;
     t->neg=nullptr;
     t->pos=nullptr;
 
-    strcpy(p->data,quest);
-    if (strcmp(choise,no))
+    p->data=quest;
+    if (choise!=no)
     {
         p->neg=t;
         p->pos=n;
@@ -89,21 +85,18 @@ void Akinator::addNode(Akinator::Node *&p)
 
 void Akinator::play()
 {
-    const int strSize=64;
-
-    char enter[strSize];
-    char yes[strSize]="да";
+    string enter;
+    string yes="да";
     Node *p=root;
     bool aplay=true;
     while (aplay)
     {
-        cout<<p->data<<endl;
         if (p->pos==nullptr)
         {
-            cout<<"Угадал?"<<endl;
-            cout<<"да/нет"<<endl;
-            cin.getline(enter,strSize);
-            if (strcmp(enter,yes))
+            cout<<"Ответ: "<<p->data<<endl;
+            cout<<"Угадал? [да/нет]"<<endl;
+            enter=enterProtector();
+            if (enter!=yes)
             {
                 Akinator::addNode(p);
             }
@@ -111,9 +104,9 @@ void Akinator::play()
         }
         else
         {
-            cout<<"да/нет"<<endl;
-            cin.getline(enter,strSize);
-            if (strcmp(enter,yes))
+            cout<<p->data<<" [да/нет]"<<endl;
+            enter=enterProtector();
+            if (enter!=yes)
             {
                 p=p->neg;
             }
@@ -123,4 +116,102 @@ void Akinator::play()
             }
         }
     }
+}
+
+void Akinator::show(Akinator::Node *p)
+{
+    if (p)
+    {
+        cout<<p->data<<endl;
+        show(p->neg);
+        show(p->pos);
+    }
+    else
+    {
+        return;
+    }
+}
+
+void Akinator::save()
+{
+    ofstream fout;
+    fout.open("data.txt");
+    fout.close();
+    write(root);
+
+}
+
+void Akinator::write(Akinator::Node *p)
+{
+    if (p)
+    {
+        ofstream fout;
+        fout.open("data.txt",ios_base::out|ios_base::app);
+        fout<<p->data<<endl;
+        if (p->neg!=nullptr)
+        {
+            fout<<"1"<<endl;
+        }
+        else
+        {
+            fout<<"0"<<endl;
+        }
+        fout.close();
+        write(p->neg);
+        write(p->pos);
+    }
+    else
+    {
+        return;
+    }
+}
+
+void Akinator::read(std::ifstream& mystream, Akinator::Node *&p)
+{
+    string mydata;
+    string isNode;
+    p=new Node;
+    p->neg=nullptr;
+    p->pos=nullptr;
+    getline(mystream,mydata);
+    p->data=mydata;
+    getline(mystream,isNode);
+    if(isNode=="1")
+    {
+        Node *ptrL=nullptr;
+        ptrL=new Node;
+        ptrL->neg=nullptr;
+        ptrL->pos=nullptr;
+        p->neg=ptrL;
+        ptrL=nullptr;
+        read(mystream, p->neg);
+        Node *ptrR=nullptr;
+        ptrR=new Node;
+        ptrR->neg=nullptr;
+        ptrR->pos=nullptr;
+        p->pos=ptrR;
+        ptrR=nullptr;
+        read(mystream, p->pos);
+    }
+}
+
+void Akinator::load()
+{
+    ifstream mystream("data.txt",ios_base::in);
+    read(mystream, root);
+    mystream.close();
+}
+
+string enterProtector()
+{
+    string yes="да";
+    string no="нет";
+    string enter;
+    cin>>enter;
+    if (enter!=yes && enter!= no)
+    {
+        cout<<"Неверный ввод. Повторите попытку [да/нет]"<<endl;
+        enterProtector();
+    }
+    return enter;
 }
